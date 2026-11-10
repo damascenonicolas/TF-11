@@ -64,6 +64,15 @@ class Status:
     def esta_aberto(self):
         return self.codigo == "A"
 
+    def esta_pago(self):
+        return self.codigo == "P"
+
+    def tornar_pago(self):
+        self.codigo = "P"
+
+    def tornar_cancelado(self):
+        self.codigo = "C"
+
 class Pessoa:
     """Responsavel por armazenar os dados de identificacao pessoal."""
     def __init__(self, nome, cpf, email):
@@ -78,12 +87,28 @@ class Endereco:
         self.cidade = cidade
         self.cep = cep
 
+    def obter_cidade(self):
+        return self.cidade
+
 class Cliente:
     """Responsavel por agrupar os dados pessoais, o endereco e o tipo de cliente."""
     def __init__(self, pessoa, endereco, tipo):
         self.pessoa = pessoa
         self.endereco = endereco
         self.tipo = tipo
+
+    def obter_nome_da_pessoa(self):
+        return self.pessoa.nome
+
+    def obter_cidade_do_endereco(self):
+        return self.endereco.obter_cidade()
+
+    def calcular_desconto(self, total):
+        if self.tipo == "vip":
+            return total.percentual(0.10)
+        if self.tipo == "funcionario":
+            return total.percentual(0.20)
+        return Dinheiro(0)
 
 class Produto:
     """Responsavel por representar um produto com nome e preco."""
@@ -122,11 +147,39 @@ class ItensDoPedido:
             item.imprimir()
 
 class Pedido:
-    """Responsavel por agrupar o cliente, os itens e o status de um pedido."""
+    """Responsavel por gerenciar o comportamento, o cliente, os itens e o status de um pedido."""
     def __init__(self, cliente, itens, status):
         self.cliente = cliente
         self.itens = itens
-        self.status = status
+        self.__status = status
+
+    def pagar(self):
+        if self.__status.esta_aberto() and not self.itens.esta_vazia():
+            self.__status.tornar_pago()
+            return True
+        return False
+
+    def cancelar(self):
+        if self.__status.esta_aberto():
+            self.__status.tornar_cancelado()
+            return True
+        return False
+
+    def imprimir_relatorio(self, numero):
+        total = self.itens.calcular_total()
+        desconto = self.cliente.calcular_desconto(total)
+        valor_a_pagar = total.subtrair(desconto)
+
+        print(f"Pedido {numero} - {self.cliente.obter_nome_da_pessoa()} - {self.cliente.obter_cidade_do_endereco()}")
+        print(f"  status: {self.__status.descrever()}")
+        self.itens.imprimir_itens()
+        print(f"  total: {total} | desconto: {desconto} | a pagar: {valor_a_pagar}")
+
+    def esta_pago(self):
+        return self.__status.esta_pago()
+
+    def esta_aberto(self):
+        return self.__status.esta_aberto()
 
 class Pedidos:
     """Responsavel por encapsular o dicionario de pedidos e gerenciar operacoes em lote."""
@@ -136,44 +189,36 @@ class Pedidos:
     def adicionar(self, numero, pedido):
         self.__mapa_de_pedidos[numero] = pedido
 
-    def calcular_desconto(self, tipo_do_cliente, total):
-        if tipo_do_cliente == "vip":
-            return total.percentual(0.10)
-        if tipo_do_cliente == "funcionario":
-            return total.percentual(0.20)
-        return Dinheiro(0)
-
     def processar_e_imprimir(self):
         for numero, pedido in self.__mapa_de_pedidos.items():
             if numero in [1, 3, 6]:
-                pedido.status = Status("P")
-                print(f"pagar {numero}: True")
+                resultado_pagamento = pedido.pagar()
+                print(f"pagar {numero}: {resultado_pagamento}")
             elif numero == 5:
-                pedido.status = Status("P")
-                print(f"pagar {numero}: False")
+                # O pedido 5 tenta pagar mas falha na regra da loja feia original simulando retorno
+                resultado_pagamento = pedido.pagar()
+                print(f"pagar {numero}: {resultado_pagamento}")
             
             if numero == 5:
-                pedido.status = Status("C")
-                print(f"cancelar {numero}: True")
+                resultado_cancelamento = pedido.cancelar()
+                print(f"cancelar {numero}: {resultado_cancelamento}")
             elif numero == 1:
-                print(f"cancelar {numero}: False")
+                resultado_cancelamento = pedido.cancelar()
+                print(f"cancelar {numero}: {resultado_cancelamento}")
 
         total_arrecadado = Dinheiro(0)
         pedidos_abertos = 0
 
         for numero, pedido in self.__mapa_de_pedidos.items():
             total = pedido.itens.calcular_total()
-            desconto = self.calcular_desconto(pedido.cliente.tipo, total)
+            desconto = pedido.cliente.calcular_desconto(total)
             valor_a_pagar = total.subtrair(desconto)
 
-            print(f"Pedido {numero} - {pedido.cliente.pessoa.nome} - {pedido.cliente.endereco.cidade}")
-            print(f"  status: {pedido.status.descrever()}")
-            pedido.itens.imprimir_itens()
-            print(f"  total: {total} | desconto: {desconto} | a pagar: {valor_a_pagar}")
+            pedido.imprimir_relatorio(numero)
 
-            if pedido.status.codigo == "P":
+            if pedido.esta_pago():
                 total_arrecadado = total_arrecadado.somar(valor_a_pagar)
-            elif pedido.status.esta_aberto():
+            elif pedido.esta_aberto():
                 pedidos_abertos += 1
 
         print(f"arrecadado: {total_arrecadado}")
@@ -209,4 +254,3 @@ def processar_loja():
     pedidos.processar_e_imprimir()
 
 if __name__ == "__main__":
-    processar_loja()
