@@ -1,4 +1,3 @@
-# loja.py - Passo 5: Colecoes de primeira classe
 
 class Cpf:
     """Responsavel por validar e encapsular o numero de CPF."""
@@ -65,15 +64,25 @@ class Status:
     def esta_aberto(self):
         return self.codigo == "A"
 
-class Cliente:
-    """Responsavel por armazenar os dados cadastrais e de endereco de um cliente."""
-    def __init__(self, nome, cpf, email, rua, cidade, cep, tipo):
+class Pessoa:
+    """Responsavel por armazenar os dados de identificacao pessoal."""
+    def __init__(self, nome, cpf, email):
         self.nome = nome
         self.cpf = cpf
         self.email = email
+
+class Endereco:
+    """Responsavel por armazenar os dados de localizacao."""
+    def __init__(self, rua, cidade, cep):
         self.rua = rua
         self.cidade = cidade
         self.cep = cep
+
+class Cliente:
+    """Responsavel por agrupar os dados pessoais, o endereco e o tipo de cliente."""
+    def __init__(self, pessoa, endereco, tipo):
+        self.pessoa = pessoa
+        self.endereco = endereco
         self.tipo = tipo
 
 class Produto:
@@ -135,7 +144,6 @@ class Pedidos:
         return Dinheiro(0)
 
     def processar_e_imprimir(self):
-        # Acoes do roteiro simuladas
         for numero, pedido in self.__mapa_de_pedidos.items():
             if numero in [1, 3, 6]:
                 pedido.status = Status("P")
@@ -158,7 +166,7 @@ class Pedidos:
             desconto = self.calcular_desconto(pedido.cliente.tipo, total)
             valor_a_pagar = total.subtrair(desconto)
 
-            print(f"Pedido {numero} - {pedido.cliente.nome} - {pedido.cliente.cidade}")
+            print(f"Pedido {numero} - {pedido.cliente.pessoa.nome} - {pedido.cliente.endereco.cidade}")
             print(f"  status: {pedido.status.descrever()}")
             pedido.itens.imprimir_itens()
             print(f"  total: {total} | desconto: {desconto} | a pagar: {valor_a_pagar}")
@@ -172,7 +180,6 @@ class Pedidos:
         print(f"abertos: {pedidos_abertos}")
 
 def processar_loja():
-    # Instanciando produtos unicos
     produto_caderno = Produto("Caderno", Dinheiro.de_reais(15.50))
     produto_caneta = Produto("Caneta", Dinheiro.de_reais(2.50))
     produto_mochila = Produto("Mochila", Dinheiro.de_reais(120.00))
@@ -181,14 +188,14 @@ def processar_loja():
     produto_fone = Produto("Fone", Dinheiro.de_reais(60.00))
 
     brutos = [
-        (1, lambda: Cliente("Ana Souza", Cpf("12345678901"), Email("ana@email.com"), "Rua A", "Sorocaba", Cep("18000000"), "normal"), ItensDoPedido([ItemDoPedido(produto_caderno, 2), ItemDoPedido(produto_caneta, 5)]), Status("A")),
-        (2, lambda: Cliente("Bruno Lima", Cpf("123"), Email("bruno@email.com"), "Rua B", "Itu", Cep("13300000"), "vip"), ItensDoPedido([ItemDoPedido(produto_mochila, 1)]), Status("A")),
-        (3, lambda: Cliente("Ana Souza", Cpf("12345678901"), Email("ana@email.com"), "Rua A", "Sorocaba", Cep("18000000"), "normal"), ItensDoPedido([ItemDoPedido(produto_livro, 1)]), Status("A")),
-        (4, lambda: Cliente("Carla Dias", Cpf("98765432100"), Email("carla-email.com"), "Rua C", "Campinas", Cep("13000000"), "funcionario"), ItensDoPedido([ItemDoPedido(produto_estojo, 2)]), Status("A")),
-        (5, lambda: Cliente("Diego Rocha", Cpf("45678912300"), Email("diego@email.com"), "Rua D", "Itu", Cep("13300000"), "vip"), ItensDoPedido([ItemDoPedido(produto_caderno, 1)]), Status("A")),
-        (6, lambda: Cliente("Eva Nunes", Cpf("78912345600"), Email("eva@email.com"), "Rua E", "Itu", Cep("13300000"), "funcionario"), ItensDoPedido([ItemDoPedido(produto_fone, 1)]), Status("A")),
-        (7, lambda: Cliente("Fbio Melo", Cpf("32165498700"), Email("fabio@email.com"), "Rua F", "Sorocaba", Cep("18000"), "normal"), ItensDoPedido([ItemDoPedido(produto_caneta, 10)]), Status("A")),
-        (8, lambda: Cliente("Gil Alves", Cpf("65498732100"), Email("gil@email.com"), "Rua G", "Sorocaba", Cep("18000000"), "normal"), ItensDoPedido([ItemDoPedido(produto_fone, 2)]), Status("A"))
+        (1, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), "normal"), ItensDoPedido([ItemDoPedido(produto_caderno, 2), ItemDoPedido(produto_caneta, 5)]), Status("A")),
+        (2, lambda: Cliente(Pessoa("Bruno Lima", Cpf("123"), Email("bruno@email.com")), Endereco("Rua B", "Itu", Cep("13300000")), "vip"), ItensDoPedido([ItemDoPedido(produto_mochila, 1)]), Status("A")),
+        (3, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), "normal"), ItensDoPedido([ItemDoPedido(produto_livro, 1)]), Status("A")),
+        (4, lambda: Cliente(Pessoa("Carla Dias", Cpf("98765432100"), Email("carla-email.com")), Endereco("Rua C", "Campinas", Cep("13000000")), "funcionario"), ItensDoPedido([ItemDoPedido(produto_estojo, 2)]), Status("A")),
+        (5, lambda: Cliente(Pessoa("Diego Rocha", Cpf("45678912300"), Email("diego@email.com")), Endereco("Rua D", "Itu", Cep("13300000")), "vip"), ItensDoPedido([ItemDoPedido(produto_caderno, 1)]), Status("A")),
+        (6, lambda: Cliente(Pessoa("Eva Nunes", Cpf("78912345600"), Email("eva@email.com")), Endereco("Rua E", "Itu", Cep("13300000")), "funcionario"), ItensDoPedido([ItemDoPedido(produto_fone, 1)]), Status("A")),
+        (7, lambda: Cliente(Pessoa("Fbio Melo", Cpf("32165498700"), Email("fabio@email.com")), Endereco("Rua F", "Sorocaba", Cep("18000")), "normal"), ItensDoPedido([ItemDoPedido(produto_caneta, 10)]), Status("A")),
+        (8, lambda: Cliente(Pessoa("Gil Alves", Cpf("65498732100"), Email("gil@email.com")), Endereco("Rua G", "Sorocaba", Cep("18000000")), "normal"), ItensDoPedido([ItemDoPedido(produto_fone, 2)]), Status("A"))
     ]
 
     pedidos = Pedidos()
