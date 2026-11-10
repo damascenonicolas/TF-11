@@ -224,7 +224,7 @@ def processar_loja():
         (1, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), TipoNormal()), ItensDoPedido([ItemDoPedido(pcad, 2), ItemDoPedido(pcan, 5)]), Status("A")),
         (2, lambda: Cliente(Pessoa("Bruno Lima", Cpf("123"), Email("bruno@email.com")), Endereco("Rua B", "Itu", Cep("13300000")), TipoVip()), ItensDoPedido([ItemDoPedido(pmoc, 1)]), Status("A")),
         (3, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), TipoNormal()), ItensDoPedido([ItemDoPedido(pliv, 1)]), Status("A")),
-        (4, lambda: Cliente(Pessoa("Carla Dias", Cpf("98765432100")), Endereco("Rua C", "Campinas", Cep("13000000")), TipoFuncionario()), ItensDoPedido([ItemDoPedido(pest, 2)]), Status("A")),
+        (4, lambda: Cliente(Pessoa("Carla Dias", Cpf("98765432100"), Email("carla-email.com")), Endereco("Rua C", "Campinas", Cep("13000000")), TipoFuncionario()), ItensDoPedido([ItemDoPedido(pest, 2)]), Status("A")),
         (5, lambda: Cliente(Pessoa("Diego Rocha", Cpf("45678912300"), Email("diego@email.com")), Endereco("Rua D", "Itu", Cep("13300000")), TipoVip()), ItensDoPedido([ItemDoPedido(pcad, 1)]), Status("A")),
         (6, lambda: Cliente(Pessoa("Eva Nunes", Cpf("78912345600"), Email("eva@email.com")), Endereco("Rua E", "Itu", Cep("13300000")), TipoFuncionario()), ItensDoPedido([ItemDoPedido(pfon, 1)]), Status("A")),
         (7, lambda: Cliente(Pessoa("Fbio Melo", Cpf("32165498700"), Email("fabio@email.com")), Endereco("Rua F", "Sorocaba", Cep("18000")), TipoNormal()), ItensDoPedido([ItemDoPedido(pcan, 10)]), Status("A")),
