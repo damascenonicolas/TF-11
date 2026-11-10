@@ -53,13 +53,12 @@ class Status:
         self.codigo = codigo
 
     def descrever(self):
-        if self.codigo == "A":
-            return "aberto"
-        if self.codigo == "P":
-            return "pago"
-        if self.codigo == "C":
-            return "cancelado"
-        return ""
+        descricoes = {
+            "A": "aberto",
+            "P": "pago",
+            "C": "cancelado"
+        }
+        return descricoes.get(self.codigo, "")
 
     def esta_aberto(self):
         return self.codigo == "A"
@@ -72,6 +71,21 @@ class Status:
 
     def tornar_cancelado(self):
         self.codigo = "C"
+
+class TipoNormal:
+    """Responsavel por calcular o desconto para clientes normais (0%)."""
+    def calcular_desconto(self, total):
+        return Dinheiro(0)
+
+class TipoVip:
+    """Responsavel por calcular o desconto para clientes VIP (10%)."""
+    def calcular_desconto(self, total):
+        return total.percentual(0.10)
+
+class TipoFuncionario:
+    """Responsavel por calcular o desconto para clientes funcionarios (20%)."""
+    def calcular_desconto(self, total):
+        return total.percentual(0.20)
 
 class Pessoa:
     """Responsavel por armazenar os dados de identificacao pessoal."""
@@ -91,11 +105,11 @@ class Endereco:
         return self.cidade
 
 class Cliente:
-    """Responsavel por agrupar os dados pessoais, o endereco e o tipo de cliente."""
-    def __init__(self, pessoa, endereco, tipo):
+    """Responsavel por agrupar os dados pessoais, o endereco e a estrategia de desconto."""
+    def __init__(self, pessoa, endereco, tipo_estrategia):
         self.pessoa = pessoa
         self.endereco = endereco
-        self.tipo = tipo
+        self.tipo_estrategia = tipo_estrategia
 
     def obter_nome_da_pessoa(self):
         return self.pessoa.nome
@@ -104,11 +118,7 @@ class Cliente:
         return self.endereco.obter_cidade()
 
     def calcular_desconto(self, total):
-        if self.tipo == "vip":
-            return total.percentual(0.10)
-        if self.tipo == "funcionario":
-            return total.percentual(0.20)
-        return Dinheiro(0)
+        return self.tipo_estrategia.calcular_desconto(total)
 
 class Produto:
     """Responsavel por representar um produto com nome e preco."""
@@ -154,16 +164,18 @@ class Pedido:
         self.__status = status
 
     def pagar(self):
-        if self.__status.esta_aberto() and not self.itens.esta_vazia():
-            self.__status.tornar_pago()
-            return True
-        return False
+        if not self.__status.esta_aberto():
+            return False
+        if self.itens.esta_vazia():
+            return False
+        self.__status.tornar_pago()
+        return True
 
     def cancelar(self):
-        if self.__status.esta_aberto():
-            self.__status.tornar_cancelado()
-            return True
-        return False
+        if not self.__status.esta_aberto():
+            return False
+        self.__status.tornar_cancelado()
+        return True
 
     def imprimir_relatorio(self, numero):
         total = self.itens.calcular_total()
@@ -190,21 +202,18 @@ class Pedidos:
         self.__mapa_de_pedidos[numero] = pedido
 
     def processar_e_imprimir(self):
-        for numero, pedido in self.__mapa_de_pedidos.items():
-            if numero in [1, 3, 6]:
-                resultado_pagamento = pedido.pagar()
-                print(f"pagar {numero}: {resultado_pagamento}")
-            elif numero == 5:
-                # O pedido 5 tenta pagar mas falha na regra da loja feia original simulando retorno
-                resultado_pagamento = pedido.pagar()
-                print(f"pagar {numero}: {resultado_pagamento}")
-            
-            if numero == 5:
-                resultado_cancelamento = pedido.cancelar()
-                print(f"cancelar {numero}: {resultado_cancelamento}")
-            elif numero == 1:
-                resultado_cancelamento = pedido.cancelar()
-                print(f"cancelar {numero}: {resultado_cancelamento}")
+        acoes = [
+            (1, lambda p: print(f"pagar 1: {p.pagar()}")),
+            (1, lambda p: print(f"cancelar 1: {p.cancelar()}")),
+            (3, lambda p: print(f"pagar 3: {p.pagar()}")),
+            (5, lambda p: print(f"pagar 5: {p.pagar()}")),
+            (5, lambda p: print(f"cancelar 5: {p.cancelar()}")),
+            (6, lambda p: print(f"pagar 6: {p.pagar()}"))
+        ]
+
+        for numero, acao in acoes:
+            if numero in self.__mapa_de_pedidos:
+                acao(self.__mapa_de_pedidos[numero])
 
         total_arrecadado = Dinheiro(0)
         pedidos_abertos = 0
@@ -233,24 +242,8 @@ def processar_loja():
     produto_fone = Produto("Fone", Dinheiro.de_reais(60.00))
 
     brutos = [
-        (1, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), "normal"), ItensDoPedido([ItemDoPedido(produto_caderno, 2), ItemDoPedido(produto_caneta, 5)]), Status("A")),
-        (2, lambda: Cliente(Pessoa("Bruno Lima", Cpf("123"), Email("bruno@email.com")), Endereco("Rua B", "Itu", Cep("13300000")), "vip"), ItensDoPedido([ItemDoPedido(produto_mochila, 1)]), Status("A")),
-        (3, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), "normal"), ItensDoPedido([ItemDoPedido(produto_livro, 1)]), Status("A")),
-        (4, lambda: Cliente(Pessoa("Carla Dias", Cpf("98765432100"), Email("carla-email.com")), Endereco("Rua C", "Campinas", Cep("13000000")), "funcionario"), ItensDoPedido([ItemDoPedido(produto_estojo, 2)]), Status("A")),
-        (5, lambda: Cliente(Pessoa("Diego Rocha", Cpf("45678912300"), Email("diego@email.com")), Endereco("Rua D", "Itu", Cep("13300000")), "vip"), ItensDoPedido([ItemDoPedido(produto_caderno, 1)]), Status("A")),
-        (6, lambda: Cliente(Pessoa("Eva Nunes", Cpf("78912345600"), Email("eva@email.com")), Endereco("Rua E", "Itu", Cep("13300000")), "funcionario"), ItensDoPedido([ItemDoPedido(produto_fone, 1)]), Status("A")),
-        (7, lambda: Cliente(Pessoa("Fbio Melo", Cpf("32165498700"), Email("fabio@email.com")), Endereco("Rua F", "Sorocaba", Cep("18000")), "normal"), ItensDoPedido([ItemDoPedido(produto_caneta, 10)]), Status("A")),
-        (8, lambda: Cliente(Pessoa("Gil Alves", Cpf("65498732100"), Email("gil@email.com")), Endereco("Rua G", "Sorocaba", Cep("18000000")), "normal"), ItensDoPedido([ItemDoPedido(produto_fone, 2)]), Status("A"))
-    ]
-
-    pedidos = Pedidos()
-    for numero, fabrica_cliente, itens, status in brutos:
-        try:
-            cliente = fabrica_cliente()
-            pedidos.adicionar(numero, Pedido(cliente, itens, status))
-        except ValueError as erro:
-            print(f"pedido {numero} recusado: {erro}")
-
-    pedidos.processar_e_imprimir()
-
-if __name__ == "__main__":
+        (1, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), TipoNormal()), ItensDoPedido([ItemDoPedido(produto_caderno, 2), ItemDoPedido(produto_caneta, 5)]), Status("A")),
+        (2, lambda: Cliente(Pessoa("Bruno Lima", Cpf("123"), Email("bruno@email.com")), Endereco("Rua B", "Itu", Cep("13300000")), TipoVip()), ItensDoPedido([ItemDoPedido(produto_mochila, 1)]), Status("A")),
+        (3, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), TipoNormal()), ItensDoPedido([ItemDoPedido(produto_livro, 1)]), Status("A")),
+        (4, lambda: Cliente(Pessoa("Carla Dias", Cpf("98765432100"), Email("carla-email.com")), Endereco("Rua C", "Campinas", Cep("13000000")), TipoFuncionario()), ItensDoPedido([ItemDoPedido(produto_estojo, 2)]), Status("A")),
+        (5, lambda: Cliente(Pessoa("Diego Rocha", Cpf("45678
