@@ -1,13 +1,10 @@
-
 class Cpf:
-    """Responsavel por validar e encapsular o numero de CPF."""
     def __init__(self, valor):
         if len(valor) != 11:
             raise ValueError("cpf invalido")
         self.valor = valor
 
 class Email:
-    """Responsavel por validar e encapsular o endereco de email."""
     def __init__(self, valor):
         if valor == "":
             raise ValueError("email vazio")
@@ -16,14 +13,12 @@ class Email:
         self.valor = valor
 
 class Cep:
-    """Responsavel por validar e encapsular o CEP."""
     def __init__(self, valor):
         if len(valor) != 8:
             raise ValueError("cep invalido")
         self.valor = valor
 
 class Dinheiro:
-    """Responsavel por armazenar valores monetarios em centavos (inteiros) e formatar a exibicao."""
     def __init__(self, centavos):
         self.centavos = int(round(centavos))
 
@@ -48,16 +43,11 @@ class Dinheiro:
         return f"R$ {reais:.2f}"
 
 class Status:
-    """Responsavel por encapsular o status do pedido e suas descricoes."""
     def __init__(self, codigo):
         self.codigo = codigo
 
     def descrever(self):
-        descricoes = {
-            "A": "aberto",
-            "P": "pago",
-            "C": "cancelado"
-        }
+        descricoes = {"A": "aberto", "P": "pago", "C": "cancelado"}
         return descricoes.get(self.codigo, "")
 
     def esta_aberto(self):
@@ -73,29 +63,24 @@ class Status:
         self.codigo = "C"
 
 class TipoNormal:
-    """Responsavel por calcular o desconto para clientes normais (0%)."""
     def calcular_desconto(self, total):
         return Dinheiro(0)
 
 class TipoVip:
-    """Responsavel por calcular o desconto para clientes VIP (10%)."""
     def calcular_desconto(self, total):
         return total.percentual(0.10)
 
 class TipoFuncionario:
-    """Responsavel por calcular o desconto para clientes funcionarios (20%)."""
     def calcular_desconto(self, total):
         return total.percentual(0.20)
 
 class Pessoa:
-    """Responsavel por armazenar os dados de identificacao pessoal."""
     def __init__(self, nome, cpf, email):
         self.nome = nome
         self.cpf = cpf
         self.email = email
 
 class Endereco:
-    """Responsavel por armazenar os dados de localizacao."""
     def __init__(self, rua, cidade, cep):
         self.rua = rua
         self.cidade = cidade
@@ -105,7 +90,6 @@ class Endereco:
         return self.cidade
 
 class Cliente:
-    """Responsavel por agrupar os dados pessoais, o endereco e a estrategia de desconto."""
     def __init__(self, pessoa, endereco, tipo_estrategia):
         self.pessoa = pessoa
         self.endereco = endereco
@@ -121,13 +105,11 @@ class Cliente:
         return self.tipo_estrategia.calcular_desconto(total)
 
 class Produto:
-    """Responsavel por representar um produto com nome e preco."""
     def __init__(self, nome, preco):
         self.nome = nome
         self.preco = preco
 
 class ItemDoPedido:
-    """Responsavel por associar um produto a uma quantidade dentro de um pedido."""
     def __init__(self, produto, quantidade):
         self.produto = produto
         self.quantidade = quantidade
@@ -139,7 +121,6 @@ class ItemDoPedido:
         print(f"   {self.quantidade} x {self.produto.nome} = {self.calcular_subtotal()}")
 
 class ItensDoPedido:
-    """Responsavel por encapsular a colecao de itens de um pedido."""
     def __init__(self, lista_de_itens):
         self.__itens = list(lista_de_itens)
 
@@ -157,7 +138,6 @@ class ItensDoPedido:
             item.imprimir()
 
 class Pedido:
-    """Responsavel por gerenciar o comportamento, o cliente, os itens e o status de um pedido."""
     def __init__(self, cliente, itens, status):
         self.cliente = cliente
         self.itens = itens
@@ -194,7 +174,6 @@ class Pedido:
         return self.__status.esta_aberto()
 
 class Pedidos:
-    """Responsavel por encapsular o dicionario de pedidos e gerenciar operacoes em lote."""
     def __init__(self):
         self.__mapa_de_pedidos = {}
 
@@ -234,16 +213,33 @@ class Pedidos:
         print(f"abertos: {pedidos_abertos}")
 
 def processar_loja():
-    produto_caderno = Produto("Caderno", Dinheiro.de_reais(15.50))
-    produto_caneta = Produto("Caneta", Dinheiro.de_reais(2.50))
-    produto_mochila = Produto("Mochila", Dinheiro.de_reais(120.00))
-    produto_livro = Produto("Livro", Dinheiro.de_reais(89.50))
-    produto_estojo = Produto("Estojo", Dinheiro.de_reais(10.00))
-    produto_fone = Produto("Fone", Dinheiro.de_reais(60.00))
+    pcad = Produto("Caderno", Dinheiro.de_reais(15.50))
+    pcan = Produto("Caneta", Dinheiro.de_reais(2.50))
+    pmoc = Produto("Mochila", Dinheiro.de_reais(120.00))
+    pliv = Produto("Livro", Dinheiro.de_reais(89.50))
+    pest = Produto("Estojo", Dinheiro.de_reais(10.00))
+    pfon = Produto("Fone", Dinheiro.de_reais(60.00))
 
     brutos = [
-        (1, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), TipoNormal()), ItensDoPedido([ItemDoPedido(produto_caderno, 2), ItemDoPedido(produto_caneta, 5)]), Status("A")),
-        (2, lambda: Cliente(Pessoa("Bruno Lima", Cpf("123"), Email("bruno@email.com")), Endereco("Rua B", "Itu", Cep("13300000")), TipoVip()), ItensDoPedido([ItemDoPedido(produto_mochila, 1)]), Status("A")),
-        (3, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), TipoNormal()), ItensDoPedido([ItemDoPedido(produto_livro, 1)]), Status("A")),
-        (4, lambda: Cliente(Pessoa("Carla Dias", Cpf("98765432100"), Email("carla-email.com")), Endereco("Rua C", "Campinas", Cep("13000000")), TipoFuncionario()), ItensDoPedido([ItemDoPedido(produto_estojo, 2)]), Status("A")),
-        (5, lambda: Cliente(Pessoa("Diego Rocha", Cpf("45678
+        (1, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), TipoNormal()), ItensDoPedido([ItemDoPedido(pcad, 2), ItemDoPedido(pcan, 5)]), Status("A")),
+        (2, lambda: Cliente(Pessoa("Bruno Lima", Cpf("123"), Email("bruno@email.com")), Endereco("Rua B", "Itu", Cep("13300000")), TipoVip()), ItensDoPedido([ItemDoPedido(pmoc, 1)]), Status("A")),
+        (3, lambda: Cliente(Pessoa("Ana Souza", Cpf("12345678901"), Email("ana@email.com")), Endereco("Rua A", "Sorocaba", Cep("18000000")), TipoNormal()), ItensDoPedido([ItemDoPedido(pliv, 1)]), Status("A")),
+        (4, lambda: Cliente(Pessoa("Carla Dias", Cpf("98765432100")), Endereco("Rua C", "Campinas", Cep("13000000")), TipoFuncionario()), ItensDoPedido([ItemDoPedido(pest, 2)]), Status("A")),
+        (5, lambda: Cliente(Pessoa("Diego Rocha", Cpf("45678912300"), Email("diego@email.com")), Endereco("Rua D", "Itu", Cep("13300000")), TipoVip()), ItensDoPedido([ItemDoPedido(pcad, 1)]), Status("A")),
+        (6, lambda: Cliente(Pessoa("Eva Nunes", Cpf("78912345600"), Email("eva@email.com")), Endereco("Rua E", "Itu", Cep("13300000")), TipoFuncionario()), ItensDoPedido([ItemDoPedido(pfon, 1)]), Status("A")),
+        (7, lambda: Cliente(Pessoa("Fbio Melo", Cpf("32165498700"), Email("fabio@email.com")), Endereco("Rua F", "Sorocaba", Cep("18000")), TipoNormal()), ItensDoPedido([ItemDoPedido(pcan, 10)]), Status("A")),
+        (8, lambda: Cliente(Pessoa("Gil Alves", Cpf("65498732100"), Email("gil@email.com")), Endereco("Rua G", "Sorocaba", Cep("18000000")), TipoNormal()), ItensDoPedido([ItemDoPedido(pfon, 2)]), Status("A"))
+    ]
+
+    pedidos = Pedidos()
+    for numero, fabrica_cliente, itens, status in brutos:
+        try:
+            cliente = fabrica_cliente()
+            pedidos.adicionar(numero, Pedido(cliente, itens, status))
+        except ValueError as erro:
+            print(f"pedido {numero} recusado: {erro}")
+
+    pedidos.processar_e_imprimir()
+
+if __name__ == "__main__":
+    processar_loja()
