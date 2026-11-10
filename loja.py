@@ -197,7 +197,8 @@ class Pedidos:
         total_arrecadado = Dinheiro(0)
         pedidos_abertos = 0
 
-        for numero, pedido in self.__mapa_de_pedidos.items():
+        for numero in sorted(self.__mapa_de_pedidos.keys()):
+            pedido = self.__mapa_de_pedidos[numero]
             total = pedido.itens.calcular_total()
             desconto = pedido.cliente.calcular_desconto(total)
             valor_a_pagar = total.subtrair(desconto)
