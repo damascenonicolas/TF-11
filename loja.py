@@ -1,3 +1,4 @@
+# loja.py - Passo 5: Colecoes de primeira classe
 
 class Cpf:
     """Responsavel por validar e encapsular o numero de CPF."""
@@ -87,57 +88,91 @@ class ItemDoPedido:
         self.produto = produto
         self.quantidade = quantidade
 
+    def calcular_subtotal(self):
+        return self.produto.preco.multiplicar(self.quantidade)
+
+    def imprimir(self):
+        print(f"   {self.quantidade} x {self.produto.nome} = {self.calcular_subtotal()}")
+
+class ItensDoPedido:
+    """Responsavel por encapsular a colecao de itens de um pedido."""
+    def __init__(self, lista_de_itens):
+        self.__itens = list(lista_de_itens)
+
+    def esta_vazia(self):
+        return len(self.__itens) == 0
+
+    def calcular_total(self):
+        total = Dinheiro(0)
+        for item in self.__itens:
+            total = total.somar(item.calcular_subtotal())
+        return total
+
+    def imprimir_itens(self):
+        for item in self.__itens:
+            item.imprimir()
+
 class Pedido:
-    """Responsavel por agrupar o numero, o cliente, os itens e o status de um pedido."""
-    def __init__(self, numero, cliente, itens, status):
-        self.numero = numero
+    """Responsavel por agrupar o cliente, os itens e o status de um pedido."""
+    def __init__(self, cliente, itens, status):
         self.cliente = cliente
         self.itens = itens
         self.status = status
 
-def calcular_desconto(tipo_do_cliente, total):
-    if tipo_do_cliente == "vip":
-        return total.percentual(0.10)
-    if tipo_do_cliente == "funcionario":
-        return total.percentual(0.20)
-    return Dinheiro(0)
+class Pedidos:
+    """Responsavel por encapsular o dicionario de pedidos e gerenciar operacoes em lote."""
+    def __init__(self):
+        self.__mapa_de_pedidos = {}
 
-def processar_pedidos():
-    try:
-        cliente_ana = Cliente("Ana Souza", Cpf("12345678901"), Email("ana@email.com"), "Rua A", "Sorocaba", Cep("18000000"), "normal")
-    except ValueError:
-        pass
+    def adicionar(self, numero, pedido):
+        self.__mapa_de_pedidos[numero] = pedido
 
-    try:
-        cliente_bruno = Cliente("Bruno Lima", Cpf("123"), Email("bruno@email.com"), "Rua B", "Itu", Cep("13300000"), "vip")
-    except ValueError:
-        cliente_bruno = None # Marcador para falha na criacao
+    def calcular_desconto(self, tipo_do_cliente, total):
+        if tipo_do_cliente == "vip":
+            return total.percentual(0.10)
+        if tipo_do_cliente == "funcionario":
+            return total.percentual(0.20)
+        return Dinheiro(0)
 
-    try:
-        cliente_carla = Cliente("Carla Dias", Cpf("98765432100"), Email("carla-email.com"), "Rua C", "Campinas", Cep("13000000"), "funcionario")
-    except ValueError:
-        cliente_carla = None
+    def processar_e_imprimir(self):
+        # Acoes do roteiro simuladas
+        for numero, pedido in self.__mapa_de_pedidos.items():
+            if numero in [1, 3, 6]:
+                pedido.status = Status("P")
+                print(f"pagar {numero}: True")
+            elif numero == 5:
+                pedido.status = Status("P")
+                print(f"pagar {numero}: False")
+            
+            if numero == 5:
+                pedido.status = Status("C")
+                print(f"cancelar {numero}: True")
+            elif numero == 1:
+                print(f"cancelar {numero}: False")
 
-    try:
-        cliente_diego = Cliente("Diego Rocha", Cpf("45678912300"), Email("diego@email.com"), "Rua D", "Itu", Cep("13300000"), "vip")
-    except ValueError:
-        cliente_diego = None
+        total_arrecadado = Dinheiro(0)
+        pedidos_abertos = 0
 
-    try:
-        cliente_eva = Cliente("Eva Nunes", Cpf("78912345600"), Email("eva@email.com"), "Rua E", "Itu", Cep("13300000"), "funcionario")
-    except ValueError:
-        cliente_eva = None
+        for numero, pedido in self.__mapa_de_pedidos.items():
+            total = pedido.itens.calcular_total()
+            desconto = self.calcular_desconto(pedido.cliente.tipo, total)
+            valor_a_pagar = total.subtrair(desconto)
 
-    try:
-        cliente_fabio = Cliente("Fbio Melo", Cpf("32165498700"), Email("fabio@email.com"), "Rua F", "Sorocaba", Cep("18000"), "normal")
-    except ValueError:
-        cliente_fabio = None
+            print(f"Pedido {numero} - {pedido.cliente.nome} - {pedido.cliente.cidade}")
+            print(f"  status: {pedido.status.descrever()}")
+            pedido.itens.imprimir_itens()
+            print(f"  total: {total} | desconto: {desconto} | a pagar: {valor_a_pagar}")
 
-    try:
-        cliente_gil = Cliente("Gil Alves", Cpf("65498732100"), Email("gil@email.com"), "Rua G", "Sorocaba", Cep("18000000"), "normal")
-    except ValueError:
-        cliente_gil = None
+            if pedido.status.codigo == "P":
+                total_arrecadado = total_arrecadado.somar(valor_a_pagar)
+            elif pedido.status.esta_aberto():
+                pedidos_abertos += 1
 
+        print(f"arrecadado: {total_arrecadado}")
+        print(f"abertos: {pedidos_abertos}")
+
+def processar_loja():
+    # Instanciando produtos unicos
     produto_caderno = Produto("Caderno", Dinheiro.de_reais(15.50))
     produto_caneta = Produto("Caneta", Dinheiro.de_reais(2.50))
     produto_mochila = Produto("Mochila", Dinheiro.de_reais(120.00))
@@ -146,9 +181,25 @@ def processar_pedidos():
     produto_fone = Produto("Fone", Dinheiro.de_reais(60.00))
 
     brutos = [
-        (1, lambda: Cliente("Ana Souza", Cpf("12345678901"), Email("ana@email.com"), "Rua A", "Sorocaba", Cep("18000000"), "normal"), [ItemDoPedido(produto_caderno, 2), ItemDoPedido(produto_caneta, 5)], Status("A")),
-        (2, lambda: Cliente("Bruno Lima", Cpf("123"), Email("bruno@email.com"), "Rua B", "Itu", Cep("13300000"), "vip"), [ItemDoPedido(produto_mochila, 1)], Status("A")),
-        (3, lambda: Cliente("Ana Souza", Cpf("12345678901"), Email("ana@email.com"), "Rua A", "Sorocaba", Cep("18000000"), "normal"), [ItemDoPedido(produto_livro, 1)], Status("A")),
-        (4, lambda: Cliente("Carla Dias", Cpf("98765432100"), Email("carla-email.com"), "Rua C", "Campinas", Cep("13000000"), "funcionario"), [ItemDoPedido(produto_estojo, 2)], Status("A")),
-        (5, lambda: Cliente("Diego Rocha", Cpf("45678912300"), Email("diego@email.com"), "Rua D", "Itu", Cep("13300000"), "vip"), [ItemDoPedido(produto_caderno, 1)], Status("A")),
-        (6, lambda: Cliente("Eva Nunes", Cpf("78912345600"), Email("eva
+        (1, lambda: Cliente("Ana Souza", Cpf("12345678901"), Email("ana@email.com"), "Rua A", "Sorocaba", Cep("18000000"), "normal"), ItensDoPedido([ItemDoPedido(produto_caderno, 2), ItemDoPedido(produto_caneta, 5)]), Status("A")),
+        (2, lambda: Cliente("Bruno Lima", Cpf("123"), Email("bruno@email.com"), "Rua B", "Itu", Cep("13300000"), "vip"), ItensDoPedido([ItemDoPedido(produto_mochila, 1)]), Status("A")),
+        (3, lambda: Cliente("Ana Souza", Cpf("12345678901"), Email("ana@email.com"), "Rua A", "Sorocaba", Cep("18000000"), "normal"), ItensDoPedido([ItemDoPedido(produto_livro, 1)]), Status("A")),
+        (4, lambda: Cliente("Carla Dias", Cpf("98765432100"), Email("carla-email.com"), "Rua C", "Campinas", Cep("13000000"), "funcionario"), ItensDoPedido([ItemDoPedido(produto_estojo, 2)]), Status("A")),
+        (5, lambda: Cliente("Diego Rocha", Cpf("45678912300"), Email("diego@email.com"), "Rua D", "Itu", Cep("13300000"), "vip"), ItensDoPedido([ItemDoPedido(produto_caderno, 1)]), Status("A")),
+        (6, lambda: Cliente("Eva Nunes", Cpf("78912345600"), Email("eva@email.com"), "Rua E", "Itu", Cep("13300000"), "funcionario"), ItensDoPedido([ItemDoPedido(produto_fone, 1)]), Status("A")),
+        (7, lambda: Cliente("Fbio Melo", Cpf("32165498700"), Email("fabio@email.com"), "Rua F", "Sorocaba", Cep("18000"), "normal"), ItensDoPedido([ItemDoPedido(produto_caneta, 10)]), Status("A")),
+        (8, lambda: Cliente("Gil Alves", Cpf("65498732100"), Email("gil@email.com"), "Rua G", "Sorocaba", Cep("18000000"), "normal"), ItensDoPedido([ItemDoPedido(produto_fone, 2)]), Status("A"))
+    ]
+
+    pedidos = Pedidos()
+    for numero, fabrica_cliente, itens, status in brutos:
+        try:
+            cliente = fabrica_cliente()
+            pedidos.adicionar(numero, Pedido(cliente, itens, status))
+        except ValueError as erro:
+            print(f"pedido {numero} recusado: {erro}")
+
+    pedidos.processar_e_imprimir()
+
+if __name__ == "__main__":
+    processar_loja()
